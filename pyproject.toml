@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "triplanner"
+version = "0.1"
+requires-python = ">=3.9"
+dependencies = ["pyrosm", "matplotlib"]
+authors = [
+    { name = "Áron Ricardo Perez-Lopez", email = "cyanokobalamyne@gmail.com" },
+]
+description = "An advanced trip planner for running, biking, hiking"
+readme = "README.md"
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Programming Language :: Python"
+]
+
+[project.scripts]
+triplanner = "triplanner:main"
