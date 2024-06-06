@@ -60,8 +60,8 @@ def main():
         globals()[map_name] = Maps.load(map_name)
     code.interact(
         banner=(
-            "TriPlanner: an advanced trip planner for running, biking, hiking\nType"
-            " 'exit' to exit"
+            "Welcome to TriPlanner, a trip planner for running, biking, and hiking!\n"
+            "Type 'help' for help and Ctrl+D or 'exit' to exit."
         ),
         local=globals(),
         exitmsg="Bye!",
