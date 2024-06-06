@@ -56,14 +56,15 @@ help = InteractiveString(__doc__)
 
 
 def main():
+    vars = dict(globals())
     for map_name in Maps._iter_available():
-        globals()[map_name] = Maps.load(map_name)
+        vars[map_name] = Maps.load(map_name)
     code.interact(
         banner=(
             "Welcome to TriPlanner, a trip planner for running, biking, and hiking!\n"
             "Type 'help' for help and Ctrl+D or 'exit' to exit."
         ),
-        local=globals(),
+        local=vars,
         exitmsg="Bye!",
     )
 
