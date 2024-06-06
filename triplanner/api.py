@@ -97,6 +97,11 @@ class Map:
             raise ValueError(f"first start a path with {self.name}.start")
         return self.path >> other
 
+    def __matmul__(self, other: object) -> Path:
+        if self.path is None:
+            raise ValueError(f"first start a path with {self.name}.start")
+        return self.path @ other
+
     @property
     def limits(self) -> tuple[Location, Location]:
         """Return the limits of the map as (southwest corner, northeast corner)."""
