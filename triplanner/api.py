@@ -8,7 +8,7 @@ import typing
 import warnings
 from typing import Collection, Optional, Self
 
-import geopandas
+import geopandas as gpd
 import matplotlib.axes
 import matplotlib.figure
 import matplotlib.pyplot
@@ -41,15 +41,15 @@ class Map:
     loc: dict[int, Location]
     node_lookup: NodeLookup
     nodes_of_kind: dict[NodeKind, set[int]]
-    ways: geopandas.GeoDataFrame
+    ways: gpd.GeoDataFrame
     path: Optional[Path]
 
     def __init__(
         self,
         name: str,
-        nodes: geopandas.GeoDataFrame,
-        ways: geopandas.GeoDataFrame,
-        pois: geopandas.GeoDataFrame,
+        nodes: gpd.GeoDataFrame,
+        ways: gpd.GeoDataFrame,
+        pois: gpd.GeoDataFrame,
     ) -> None:
         """Create map from nodes and ways."""
         self.name = name
@@ -65,11 +65,11 @@ class Map:
         reader = pyrosm.OSM(name + MAP_FILE_SUFFIX)
         with warnings.catch_warnings(action="ignore", category=FutureWarning):
             nodes, ways = typing.cast(
-                tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame],
+                tuple[gpd.GeoDataFrame, gpd.GeoDataFrame],
                 reader.get_network(nodes=True),
             )
             pois = typing.cast(
-                geopandas.GeoDataFrame, reader.get_pois(custom_filter={"amenity": True})
+                gpd.GeoDataFrame, reader.get_pois(custom_filter={"amenity": True})
             )
         return cls(name, nodes, ways, pois)
 
@@ -215,7 +215,7 @@ class Path:
     ) -> None:
         # Need to flip coordinates for plotting
         line = shapely.LineString((x, y) for (y, x) in route)
-        series = geopandas.GeoSeries(line, crs="EPSG:4326")
+        series = gpd.GeoSeries(line, crs="EPSG:4326")
         series.plot(ax=ax, color="red", linewidth=3, aspect="equal", zorder=2)
         # Start and end points
         y0, x0 = route[0]
