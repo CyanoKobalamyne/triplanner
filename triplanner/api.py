@@ -45,7 +45,7 @@ class Map:
     loc: dict[int, Location] = dataclasses.field(init=False, repr=False)
     node_lookup: NodeLookup = dataclasses.field(init=False, repr=False)
     nodes_of_kind: dict[NodeKind, set[int]] = dataclasses.field(init=False, repr=False)
-    path: Optional[Path] = None
+    route: Optional[Route] = None
 
     def __post_init__(self, nodes: gpd.GeoDataFrame, pois: gpd.GeoDataFrame):
         self.adj, self.loc = build_graph(nodes, self.ways)
@@ -66,15 +66,15 @@ class Map:
             )
         return cls(name, nodes, ways, pois)
 
-    def __rshift__(self, other: object) -> Path:
-        if self.path is None:
-            raise ValueError(f"first start a path with {self.name}.start")
-        return self.path >> other
+    def __rshift__(self, other: object) -> Route:
+        if self.route is None:
+            raise ValueError(f"first start a route with {self.name}.start")
+        return self.route >> other
 
-    def __matmul__(self, other: object) -> Path:
-        if self.path is None:
-            raise ValueError(f"first start a path with {self.name}.start")
-        return self.path @ other
+    def __matmul__(self, other: object) -> Route:
+        if self.route is None:
+            raise ValueError(f"first start a route with {self.name}.start")
+        return self.route @ other
 
     @property
     def limits(self) -> tuple[Location, Location]:
@@ -83,25 +83,25 @@ class Map:
         return (ymin, xmin), (ymax, xmax)
 
     @property
-    def start(self) -> Path:
-        self.path = Path(self.adj, self.loc, self.node_lookup, self.nodes_of_kind)
-        return self.path
+    def start(self) -> Route:
+        self.route = Route(self.adj, self.loc, self.node_lookup, self.nodes_of_kind)
+        return self.route
 
     @property
-    def loop(self) -> Path:
-        if self.path is None:
-            raise ValueError(f"first start a path with {self.name}.start")
-        self.path.make_loop()
-        return self.path
+    def loop(self) -> Route:
+        if self.route is None:
+            raise ValueError(f"first start a route with {self.name}.start")
+        self.route.make_loop()
+        return self.route
 
     @property
     def directions(self) -> str:
-        if self.path is None:
-            raise ValueError(f"first start a path with {self.name}.start")
-        route = self.path.route()
+        if self.route is None:
+            raise ValueError(f"first start a route with {self.name}.start")
+        path = self.route.path()
         lines = []
         prev_direction = None
-        for a, b in zip(route, route[1:]):
+        for a, b in zip(path, path[1:]):
             distance = great_circle_distance(a, b)
             direction = cardinal_direction(bearing(a, b))
             if prev_direction is None:
@@ -117,27 +117,27 @@ class Map:
         fig, ax = matplotlib.pyplot.subplots()
         ax.axis("off")
         self.ways.plot(ax=ax, color="blue", zorder=1)
-        if self.path is None:
-            warnings.warn("drawing map without a path", RuntimeWarning)
+        if self.route is None:
+            warnings.warn("drawing map without a route", RuntimeWarning)
         else:
-            self.path.draw(fig, ax)
+            self.route.draw(fig, ax)
         matplotlib.pyplot.show()
 
 
 @dataclasses.dataclass
-class Path:
+class Route:
     adj: Graph = dataclasses.field(repr=False)
     loc: dict[int, Location] = dataclasses.field(repr=False)
     node_lookup: NodeLookup = dataclasses.field(repr=False)
     nodes_of_kind: dict[NodeKind, set[int]] = dataclasses.field(repr=False)
     nodes: list[Collection[int]] = dataclasses.field(default_factory=list)
-    routes: list[list[Location]] = dataclasses.field(default_factory=list, repr=False)
+    paths: list[list[Location]] = dataclasses.field(default_factory=list, repr=False)
     constraints: dict[int, Constraint] = dataclasses.field(default_factory=dict)
     closed: bool = False
 
     def __rshift__(self, other: object) -> Self:
         if self.closed:
-            raise ValueError(f"path is closed, can't add {other}")
+            raise ValueError(f"route is closed, can't add {other}")
         if (
             isinstance(other, tuple)
             and len(other) == 2
@@ -151,13 +151,13 @@ class Path:
             self.nodes.append(node_filter)
         else:
             raise TypeError(
-                "path elements must be (latitude, longitude) tuples or place types"
+                "route elements must be (latitude, longitude) tuples or place types"
             )
         return self
 
     def __matmul__(self, other: object) -> Self:
         if len(self.nodes) < 2:
-            raise ValueError("no segments in path, cannot add a constraint")
+            raise ValueError("no segments in route, cannot add a constraint")
         if not isinstance(other, Constraint):
             raise TypeError(f"invalid constraint: {other}")
         node_index = len(self.nodes) - 2
@@ -168,26 +168,26 @@ class Path:
 
     def make_loop(self) -> None:
         if self.closed:
-            warnings.warn("path is already a loop", RuntimeWarning)
+            warnings.warn("route is already a loop", RuntimeWarning)
             return
         if not self.nodes:
-            raise ValueError("path is empty, cannot make it a loop")
+            raise ValueError("route is empty, cannot make it a loop")
         self.nodes.append(self.nodes[0])
         self.closed = True
 
-    def route(self) -> list[Location]:
-        self._update_routes()
-        return [loc for route in self.routes for loc in route]
+    def path(self) -> list[Location]:
+        self._update_paths()
+        return [loc for path in self.paths for loc in path]
 
     def draw(self, fig: matplotlib.figure.Figure, ax: matplotlib.axes.Axes) -> None:
-        self._update_routes()
-        if not self.routes:
-            warnings.warn("drawing empty path", RuntimeWarning)
-        for route in self.routes:
-            self._draw_route(fig, ax, route)
+        self._update_paths()
+        if not self.paths:
+            warnings.warn("drawing empty route", RuntimeWarning)
+        for path in self.paths:
+            self._draw_path(fig, ax, path)
 
-    def _update_routes(self) -> None:
-        n = len(self.routes)
+    def _update_paths(self) -> None:
+        n = len(self.paths)
         for i, (start, goal) in enumerate(zip(self.nodes[n:], self.nodes[n + 1 :])):
             if len(start) != 1:
                 raise NotImplementedError("generic goal only supported in last place")
@@ -201,21 +201,21 @@ class Path:
                 else:
                     heuristic = null_heuristic
                 path = a_star_search(self.adj, start, goal, heuristic)
-            self.routes.append([self.loc[n] for n in path])
+            self.paths.append([self.loc[n] for n in path])
 
-    def _draw_route(
+    def _draw_path(
         self,
         fig: matplotlib.figure.Figure,
         ax: matplotlib.axes.Axes,
-        route: list[Location],
+        path: list[Location],
     ) -> None:
         # Need to flip coordinates for plotting
-        line = shapely.LineString((x, y) for (y, x) in route)
+        line = shapely.LineString((x, y) for (y, x) in path)
         series = gpd.GeoSeries(line, crs="EPSG:4326")
         series.plot(ax=ax, color="red", linewidth=3, aspect="equal", zorder=2)
         # Start and end points
-        y0, x0 = route[0]
-        yend, xend = route[-1]
+        y0, x0 = path[0]
+        yend, xend = path[-1]
         ax.plot(x0, y0, marker="o", mec="red", mfc="white", zorder=3)
         ax.plot(xend, yend, marker="o", color="red", zorder=3)
         # Add arrows
@@ -234,7 +234,7 @@ class Path:
                     head_width=arrowsize,
                     head_length=arrowsize,
                 )
-        # Zoom to route
+        # Zoom to path
         xmin, ymin, xmax, ymax = line.bounds
         xavg, yavg = (xmin + xmax) / 2, (ymin + ymax) / 2
         width, height = xmax - xmin, ymax - ymin
