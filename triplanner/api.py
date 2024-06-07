@@ -167,6 +167,9 @@ class Path:
         return self
 
     def make_loop(self) -> None:
+        if self.closed:
+            warnings.warn("path is already a loop", RuntimeWarning)
+            return
         if not self.nodes:
             raise ValueError("path is empty, cannot make it a loop")
         self.nodes.append(self.nodes[0])
