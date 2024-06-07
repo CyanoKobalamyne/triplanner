@@ -1,7 +1,6 @@
 import enum
 import typing
 import warnings
-from collections import namedtuple
 from collections.abc import Mapping
 from typing import Literal, NamedTuple, Optional
 
@@ -34,47 +33,43 @@ class NodeType(NamedTuple):
     geometry: shapely.Geometry
 
 
-WayType = namedtuple(
-    "Pandas",
-    [
-        "access",
-        "area",
-        "bicycle",
-        "bridge",
-        "cycleway",
-        "foot",
-        "footway",
-        "highway",
-        "junction",
-        "lanes",
-        "lit",
-        "maxspeed",
-        "motorcar",
-        "motor_vehicle",
-        "name",
-        "oneway",
-        "passing_places",
-        "psv",
-        "ref",
-        "service",
-        "segregated",
-        "sidewalk",
-        "smoothness",
-        "surface",
-        "tracktype",
-        "tunnel",
-        "width",
-        "id",
-        "timestamp",
-        "version",
-        "tags",
-        "osm_type",
-        "geometry",
-        "u",
-        "v",
-        "length",
-    ],
-)
+class WayType(NamedTuple):
+    access: Optional[str]
+    area: float
+    bicycle: Optional[str]
+    bridge: Optional[str]
+    cycleway: Optional[str]
+    foot: Optional[str]
+    footway: Optional[str]
+    highway: str
+    junction: Optional[str]
+    lanes: Optional[str]
+    lit: Optional[str]
+    maxspeed: Optional[str]
+    motorcar: Optional[str]
+    motor_vehicle: Optional[str]
+    name: Optional[str]
+    oneway: Optional[str]
+    passing_places: Optional[str]
+    psv: Optional[str]
+    ref: Optional[str]
+    service: Optional[str]
+    segregated: Optional[str]
+    sidewalk: Optional[str]
+    smoothness: Optional[str]
+    surface: Optional[str]
+    tracktype: Optional[str]
+    tunnel: Optional[str]
+    width: Optional[str]
+    id: int
+    timestamp: int
+    version: int
+    tags: str
+    osm_type: Literal["way"]
+    geometry: shapely.Geometry
+    u: int
+    v: int
+    length: float
 
 
 class PoiType(NamedTuple):
