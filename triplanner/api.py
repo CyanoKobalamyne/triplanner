@@ -6,8 +6,6 @@ import dataclasses
 import itertools
 import typing
 import warnings
-from collections.abc import Iterator
-from pathlib import Path as FilePath
 from typing import Collection, Optional, Self
 
 import geopandas
@@ -32,38 +30,7 @@ from .routing import (
     make_distance_heuristic,
     null_heuristic,
 )
-from .utils import InteractiveString, classproperty
-
-MAP_FILE_SUFFIX = ".osm.pbf"
-
-
-class Maps:
-    """Allows querying and loading of available maps."""
-
-    @classproperty
-    def available(cls) -> str:
-        """Return list of available maps in the current working directory."""
-        return InteractiveString.from_iter(cls._iter_available())
-
-    @staticmethod
-    def _iter_available() -> Iterator[str]:
-        for file in FilePath.cwd().iterdir():
-            if file.name.endswith(MAP_FILE_SUFFIX):
-                yield file.name.removesuffix(MAP_FILE_SUFFIX)
-
-    @staticmethod
-    def load(name: str) -> Map:
-        """Load map with the given name located in the current working directory."""
-        reader = pyrosm.OSM(name + MAP_FILE_SUFFIX)
-        with warnings.catch_warnings(action="ignore", category=FutureWarning):
-            nodes, ways = typing.cast(
-                tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame],
-                reader.get_network(nodes=True),
-            )
-            pois = typing.cast(
-                geopandas.GeoDataFrame, reader.get_pois(custom_filter={"amenity": True})
-            )
-        return Map(name, nodes, ways, pois)
+from .utils import MAP_FILE_SUFFIX, InteractiveString
 
 
 class Map:
@@ -91,6 +58,20 @@ class Map:
         self.nodes_of_kind = sort_nodes(pois, self.node_lookup)
         self.ways = ways
         self.path = None
+
+    @classmethod
+    def load(cls, name: str) -> Self:
+        """Load map with the given name located in the current working directory."""
+        reader = pyrosm.OSM(name + MAP_FILE_SUFFIX)
+        with warnings.catch_warnings(action="ignore", category=FutureWarning):
+            nodes, ways = typing.cast(
+                tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame],
+                reader.get_network(nodes=True),
+            )
+            pois = typing.cast(
+                geopandas.GeoDataFrame, reader.get_pois(custom_filter={"amenity": True})
+            )
+        return cls(name, nodes, ways, pois)
 
     def __rshift__(self, other: object) -> Path:
         if self.path is None:

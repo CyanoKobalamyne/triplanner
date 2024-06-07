@@ -3,8 +3,8 @@
 To do any planning, you will first need to download a map in OpenStreetMap's PBF format.
 
 When you launch the app, maps in the current working directory will be made available to
-you. You can list the available maps with:
->>> Maps.available
+you. You can list the available maps with "maps":
+>>> maps
 
 The guide below assumes that you have downloaded "mycity.osm.pbf" in the current working
 directory and the command above prints "mycity". The file name is arbitrary; if it is
@@ -44,21 +44,22 @@ Have fun!
 
 import code
 
-from .api import Maps
+from .api import Map as _Map
 from .constraints import FT, LENGTH, M
 from .mapping import WATER
-from .utils import InteractiveExit, InteractiveString
+from .utils import InteractiveExit, InteractiveString, iter_maps
 
-__all__ = ["FT", "LENGTH", "M", "Maps", "WATER", "main"]
+__all__ = ["FT", "LENGTH", "M", "WATER", "exit", "help", "maps", "main"]
 
 exit = InteractiveExit()
 help = InteractiveString(__doc__)
+maps = InteractiveString.from_iter(iter_maps())
 
 
 def main():
     vars = dict(globals())
-    for map_name in Maps._iter_available():
-        vars[map_name] = Maps.load(map_name)
+    for map_name in iter_maps():
+        vars[map_name] = _Map.load(map_name)
     code.interact(
         banner=(
             "Welcome to TriPlanner, a trip planner for running, biking, and hiking!\n"

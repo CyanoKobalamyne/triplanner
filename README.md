@@ -22,9 +22,9 @@ When you launch the app, You will be presented with a prompt like this:
 ```
 
 Maps in the current working directory will be made available to you. You can list the
-available maps by typing `Maps.available` at the prompt:
+available maps by typing `maps` at the prompt:
 ```
->>> Maps.available
+>>> maps
 ```
 
 The guide below assumes that you have downloaded "mycity.osm.pbf" in the current working

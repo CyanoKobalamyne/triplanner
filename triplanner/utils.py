@@ -3,15 +3,10 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
+from pathlib import Path
 
-
-class classproperty:
-    def __init__(self, fget):
-        self.fget = fget
-
-    def __get__(self, obj, objtype=None):
-        return self.fget(objtype)
+MAP_FILE_SUFFIX = ".osm.pbf"
 
 
 class InteractiveString(str):
@@ -26,3 +21,9 @@ class InteractiveString(str):
 class InteractiveExit:
     def __repr__(self) -> str:
         sys.exit(0)
+
+
+def iter_maps() -> Iterator[str]:
+    for file in Path.cwd().iterdir():
+        if file.name.endswith(MAP_FILE_SUFFIX):
+            yield file.name.removesuffix(MAP_FILE_SUFFIX)

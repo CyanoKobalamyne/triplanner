@@ -1,22 +1,22 @@
 # flake8: noqa
 # pyright: reportUnusedExpression = false
 import os
-import typing
 import unittest
 import warnings
 
 from . import *
+from .api import Map
 
 
 def setUpModule():
     global stanford
     os.chdir(f"{os.path.dirname(__file__)}/test_files")
-    stanford = Maps.load("stanford")
+    stanford = Map.load("stanford")
 
 
 class TestTriplanner(unittest.TestCase):
     def test_static(self):
-        self.assertIn("stanford", Maps.available)
+        self.assertIn("stanford", maps)
         (x1, y1), (x2, y2) = stanford.limits
         self.assertLess(x1, x2)
         self.assertLess(y1, y2)
