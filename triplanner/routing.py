@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
-from collections.abc import Container
-from typing import Callable, Optional
+from __future__ import annotations
+
+import typing
 
 from .geometry import great_circle_distance
-from .mapping import Graph
+
+if typing.TYPE_CHECKING:
+    from collections.abc import Container
+    from typing import Callable, Optional
+
+    from .mapping import Graph
 
 
 def null_heuristic(_node: int) -> float:

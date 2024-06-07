@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import Iterable, Iterator
+import typing
 from pathlib import Path
+
+if typing.TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 MAP_FILE_SUFFIX = ".osm.pbf"
 

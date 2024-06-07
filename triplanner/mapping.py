@@ -1,13 +1,18 @@
+from __future__ import annotations
+
 import enum
 import typing
 import warnings
-from collections.abc import Mapping
-from typing import Literal, NamedTuple, Optional
 
-import geopandas
-import shapely
+if typing.TYPE_CHECKING:
+    from collections.abc import Mapping
+    from typing import Literal, Optional
 
-from .geometry import Location
+    from geopandas import GeoDataFrame
+    from shapely import Geometry
+
+    from .geometry import Location
+
 
 Graph = dict[int, dict[int, float]]
 
@@ -21,7 +26,7 @@ WATER = NodeKind.WATER
 AMENITY_KIND = {"drinking_water": NodeKind.WATER}
 
 
-class NodeType(NamedTuple):
+class NodeType(typing.NamedTuple):
     tags: Optional[str]
     visible: bool
     timestamp: int
@@ -30,10 +35,10 @@ class NodeType(NamedTuple):
     lon: float
     changeset: float
     id: int
-    geometry: shapely.Geometry
+    geometry: Geometry
 
 
-class WayType(NamedTuple):
+class WayType(typing.NamedTuple):
     access: Optional[str]
     area: float
     bicycle: Optional[str]
@@ -66,13 +71,13 @@ class WayType(NamedTuple):
     version: int
     tags: str
     osm_type: Literal["way"]
-    geometry: shapely.Geometry
+    geometry: Geometry
     u: int
     v: int
     length: float
 
 
-class PoiType(NamedTuple):
+class PoiType(typing.NamedTuple):
     tags: Optional[str]
     id: int
     timestamp: int
@@ -110,7 +115,7 @@ class PoiType(NamedTuple):
     theatre: Optional[str]
     university: Optional[str]
     wikipedia: Optional[str]
-    geometry: shapely.Geometry
+    geometry: Geometry
     osm_type: Literal["node"] | Literal["way"] | Literal["relation"]
     building: Optional[str]
     f_40: Optional[str]  # building:levels
@@ -122,7 +127,7 @@ class PoiType(NamedTuple):
 
 
 def build_graph(
-    nodes: geopandas.GeoDataFrame, ways: geopandas.GeoDataFrame
+    nodes: GeoDataFrame, ways: GeoDataFrame
 ) -> tuple[Graph, dict[int, Location]]:
     """Return graph and node info dictionary built from OSM nodes and ways."""
     adj: Graph = {}
@@ -143,7 +148,7 @@ def build_graph(
 
 
 def sort_nodes(
-    pois: geopandas.GeoDataFrame, closest_node: Mapping[Location, int]
+    pois: GeoDataFrame, closest_node: Mapping[Location, int]
 ) -> dict[NodeKind, set[int]]:
     nodes = {}
     for poi in pois.itertuples():

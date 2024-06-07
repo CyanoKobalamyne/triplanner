@@ -6,24 +6,15 @@ import dataclasses
 import itertools
 import typing
 import warnings
-from typing import Collection, Optional, Self
 
-import geopandas as gpd
-import matplotlib.axes
-import matplotlib.figure
+import geopandas
 import matplotlib.pyplot
 import pyrosm
 import shapely
 
 from .constraints import Constraint
-from .geometry import (
-    Location,
-    NodeLookup,
-    bearing,
-    cardinal_direction,
-    great_circle_distance,
-)
-from .mapping import Graph, NodeKind, build_graph, sort_nodes
+from .geometry import NodeLookup, bearing, cardinal_direction, great_circle_distance
+from .mapping import NodeKind, build_graph, sort_nodes
 from .routing import (
     a_star_search,
     constrained_shortest_path,
@@ -32,22 +23,32 @@ from .routing import (
 )
 from .utils import MAP_FILE_SUFFIX, InteractiveString
 
+if typing.TYPE_CHECKING:
+    from typing import Collection, Optional, Self
+
+    from geopandas import GeoDataFrame
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+
+    from .geometry import Location
+    from .mapping import Graph
+
 
 @dataclasses.dataclass
 class Map:
     """Represents a map over which planning takes place."""
 
     name: str
-    nodes: dataclasses.InitVar[gpd.GeoDataFrame]
-    ways: gpd.GeoDataFrame = dataclasses.field(repr=False)
-    pois: dataclasses.InitVar[gpd.GeoDataFrame]
+    nodes: dataclasses.InitVar[GeoDataFrame]
+    ways: GeoDataFrame = dataclasses.field(repr=False)
+    pois: dataclasses.InitVar[GeoDataFrame]
     adj: Graph = dataclasses.field(init=False, repr=False)
     loc: dict[int, Location] = dataclasses.field(init=False, repr=False)
     node_lookup: NodeLookup = dataclasses.field(init=False, repr=False)
     nodes_of_kind: dict[NodeKind, set[int]] = dataclasses.field(init=False, repr=False)
     route: Optional[Route] = None
 
-    def __post_init__(self, nodes: gpd.GeoDataFrame, pois: gpd.GeoDataFrame):
+    def __post_init__(self, nodes: GeoDataFrame, pois: GeoDataFrame):
         self.adj, self.loc = build_graph(nodes, self.ways)
         self.node_lookup = NodeLookup(self.loc)
         self.nodes_of_kind = sort_nodes(pois, self.node_lookup)
@@ -58,11 +59,10 @@ class Map:
         reader = pyrosm.OSM(name + MAP_FILE_SUFFIX)
         with warnings.catch_warnings(action="ignore", category=FutureWarning):
             nodes, ways = typing.cast(
-                tuple[gpd.GeoDataFrame, gpd.GeoDataFrame],
-                reader.get_network(nodes=True),
+                "tuple[GeoDataFrame, GeoDataFrame]", reader.get_network(nodes=True)
             )
             pois = typing.cast(
-                gpd.GeoDataFrame, reader.get_pois(custom_filter={"amenity": True})
+                "GeoDataFrame", reader.get_pois(custom_filter={"amenity": True})
             )
         return cls(name, nodes, ways, pois)
 
@@ -179,7 +179,7 @@ class Route:
         self._update_paths()
         return [loc for path in self.paths for loc in path]
 
-    def draw(self, fig: matplotlib.figure.Figure, ax: matplotlib.axes.Axes) -> None:
+    def draw(self, fig: Figure, ax: Axes) -> None:
         self._update_paths()
         if not self.paths:
             warnings.warn("drawing empty route", RuntimeWarning)
@@ -203,15 +203,10 @@ class Route:
                 path = a_star_search(self.adj, start, goal, heuristic)
             self.paths.append([self.loc[n] for n in path])
 
-    def _draw_path(
-        self,
-        fig: matplotlib.figure.Figure,
-        ax: matplotlib.axes.Axes,
-        path: list[Location],
-    ) -> None:
+    def _draw_path(self, fig: Figure, ax: Axes, path: list[Location]) -> None:
         # Need to flip coordinates for plotting
         line = shapely.LineString((x, y) for (y, x) in path)
-        series = gpd.GeoSeries(line, crs="EPSG:4326")
+        series = geopandas.GeoSeries(line, crs="EPSG:4326")
         series.plot(ax=ax, color="red", linewidth=3, aspect="equal", zorder=2)
         # Start and end points
         y0, x0 = path[0]

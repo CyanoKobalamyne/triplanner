@@ -1,7 +1,14 @@
+from __future__ import annotations
+
+import collections.abc
 import enum
 import math
-from collections.abc import Collection, Iterator, Mapping
+import typing
 from math import atan2, cos, sin, sqrt
+
+if typing.TYPE_CHECKING:
+    from collections.abc import Collection, Iterator
+
 
 MEAN_EARTH_RADIUS_METERS = 6_371_009
 
@@ -127,7 +134,7 @@ class NearestNeighbor:
         return candidate
 
 
-class NodeLookup(Mapping[Location, int]):
+class NodeLookup(collections.abc.Mapping[Location, int]):
     """Data structure that returns the node closest to a given location."""
 
     def __init__(self, locs: dict[int, Location], max_depth=0, branching_factor=2):
