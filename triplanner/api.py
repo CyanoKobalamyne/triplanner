@@ -33,31 +33,24 @@ from .routing import (
 from .utils import MAP_FILE_SUFFIX, InteractiveString
 
 
+@dataclasses.dataclass
 class Map:
     """Represents a map over which planning takes place."""
 
     name: str
-    adj: Graph
-    loc: dict[int, Location]
-    node_lookup: NodeLookup
-    nodes_of_kind: dict[NodeKind, set[int]]
-    ways: gpd.GeoDataFrame
-    path: Optional[Path]
+    nodes: dataclasses.InitVar[gpd.GeoDataFrame]
+    ways: gpd.GeoDataFrame = dataclasses.field(repr=False)
+    pois: dataclasses.InitVar[gpd.GeoDataFrame]
+    adj: Graph = dataclasses.field(init=False, repr=False)
+    loc: dict[int, Location] = dataclasses.field(init=False, repr=False)
+    node_lookup: NodeLookup = dataclasses.field(init=False, repr=False)
+    nodes_of_kind: dict[NodeKind, set[int]] = dataclasses.field(init=False, repr=False)
+    path: Optional[Path] = None
 
-    def __init__(
-        self,
-        name: str,
-        nodes: gpd.GeoDataFrame,
-        ways: gpd.GeoDataFrame,
-        pois: gpd.GeoDataFrame,
-    ) -> None:
-        """Create map from nodes and ways."""
-        self.name = name
-        self.adj, self.loc = build_graph(nodes, ways)
+    def __post_init__(self, nodes: gpd.GeoDataFrame, pois: gpd.GeoDataFrame):
+        self.adj, self.loc = build_graph(nodes, self.ways)
         self.node_lookup = NodeLookup(self.loc)
         self.nodes_of_kind = sort_nodes(pois, self.node_lookup)
-        self.ways = ways
-        self.path = None
 
     @classmethod
     def load(cls, name: str) -> Self:
