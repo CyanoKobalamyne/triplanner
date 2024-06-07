@@ -6,11 +6,13 @@ import warnings
 
 from . import *
 from .api import Map
+from .utils import iter_maps
 
 
 def setUpModule():
-    global stanford
+    global maps, stanford
     os.chdir(f"{os.path.dirname(__file__)}/test_files")
+    maps = list(iter_maps())
     stanford = Map.load("stanford")
 
 
