@@ -124,14 +124,14 @@ class Map:
         matplotlib.pyplot.show()
 
 
-@dataclasses.dataclass(repr=False)
+@dataclasses.dataclass
 class Path:
-    adj: Graph
-    loc: dict[int, Location]
-    node_lookup: NodeLookup
-    nodes_of_kind: dict[NodeKind, set[int]]
+    adj: Graph = dataclasses.field(repr=False)
+    loc: dict[int, Location] = dataclasses.field(repr=False)
+    node_lookup: NodeLookup = dataclasses.field(repr=False)
+    nodes_of_kind: dict[NodeKind, set[int]] = dataclasses.field(repr=False)
     nodes: list[Collection[int]] = dataclasses.field(default_factory=list)
-    routes: list[list[Location]] = dataclasses.field(default_factory=list)
+    routes: list[list[Location]] = dataclasses.field(default_factory=list, repr=False)
     constraints: dict[int, Constraint] = dataclasses.field(default_factory=dict)
     closed: bool = False
 
