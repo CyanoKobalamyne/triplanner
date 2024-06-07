@@ -43,6 +43,8 @@ Have fun!
 """
 
 import code
+import os
+import sys
 
 from .api import Map as _Map
 from .constraints import FT, LENGTH, M
@@ -60,6 +62,8 @@ def main():
     vars = dict(globals())
     for map_name in iter_maps():
         vars[map_name] = _Map.load(map_name)
+    if "DEBUG" not in os.environ:
+        sys.tracebacklimit = 0
     code.interact(
         banner=(
             "Welcome to TriPlanner, a trip planner for running, biking, and hiking!\n"
