@@ -137,12 +137,10 @@ class Path:
     loc: dict[int, Location]
     node_lookup: NodeLookup
     nodes_of_kind: dict[NodeKind, set[int]]
-    nodes: list[Collection[int]] = dataclasses.field(default_factory=list, init=False)
-    routes: list[list[Location]] = dataclasses.field(default_factory=list, init=False)
-    closed: bool = dataclasses.field(default=False, init=False)
-    constraints: dict[int, Constraint] = dataclasses.field(
-        default_factory=dict, init=False
-    )
+    nodes: list[Collection[int]] = dataclasses.field(default_factory=list)
+    routes: list[list[Location]] = dataclasses.field(default_factory=list)
+    constraints: dict[int, Constraint] = dataclasses.field(default_factory=dict)
+    closed: bool = False
 
     def __rshift__(self, other: object) -> Self:
         if self.closed:
